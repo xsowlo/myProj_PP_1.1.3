@@ -3,20 +3,26 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static jm.task.core.jdbc.util.Util.getConnection;
 
 public class UserDaoJDBCImpl implements UserDao {
+
+    private Connection connection = getConnection();
+
     public UserDaoJDBCImpl() {
 
     }
-    private Connection connection = getConnection();
 
+
+    @Override
     public void createUsersTable() {
-        PreparedStatement preparedStatement = null;
 
         if (connection == null) {
             System.err.println("ОШИБКА: соединение с базой данных не установлено");
@@ -30,8 +36,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 "AGE TINYINT" +
                 ")";
 
-        try {
-            preparedStatement = connection.prepareStatement(sql);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.executeUpdate();
             System.out.println("Таблица USER успешно создана или уже существует");
 
@@ -39,21 +44,11 @@ public class UserDaoJDBCImpl implements UserDao {
             System.err.println("ОШИБКА при создании таблицы: " + e.getMessage());
             e.printStackTrace();
 
-        } finally {
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии запроса создания " + e.getMessage());
-
-                }
-            }
         }
     }
 
-
+    @Override
     public void dropUsersTable() {
-        PreparedStatement preparedStatement = null;
 
         if (connection == null) {
             System.err.println("ОШИБКА: соединение с базой данных не установлено");
@@ -62,8 +57,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "DROP TABLE IF EXISTS USER";
 
-        try {
-            preparedStatement = connection.prepareStatement(sql);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
             preparedStatement.executeUpdate();
             System.out.println("Таблица USER успешно удалена или не существовала");
 
@@ -71,25 +65,16 @@ public class UserDaoJDBCImpl implements UserDao {
             System.err.println("ОШИБКА при удалении таблицы: " + e.getMessage());
             e.printStackTrace();
 
-        } finally {
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии запроса удаления: " + e.getMessage());
-                }
-            }
         }
 
     }
 
+    @Override
     public void saveUser(String name, String lastName, byte age) {
-        PreparedStatement preparedStatement = null;
+
 
         String sql = "INSERT INTO USER (NAME, LASTNAME, AGE) VALUES(?,?,?)";
-        try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(sql);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
@@ -99,28 +84,13 @@ public class UserDaoJDBCImpl implements UserDao {
 
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
         }
         System.out.println("User с именем - " + name + " добавлен в базу данных");
 
     }
 
+    @Override
     public void removeUserById(long id) {
-        PreparedStatement preparedStatement = null;
 
         if (connection == null) {
             System.err.println("ОШИБКА: соединение с базой данных не установлено");
@@ -129,9 +99,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "DELETE FROM USER WHERE ID = ?";
 
-        try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(sql);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
             preparedStatement.setLong(1, id);
 
             int resDrop = preparedStatement.executeUpdate();
@@ -145,22 +113,12 @@ public class UserDaoJDBCImpl implements UserDao {
         } catch (SQLException e) {
             System.err.println("ОШИБКА при удалении пользователя: " + e.getMessage());
             e.printStackTrace();
-
-        } finally {
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии запроса удаления: " + e.getMessage());
-                }
-            }
         }
     }
 
+    @Override
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
-        Statement statement = null;
-        ResultSet resultSet = null;
 
         if (connection == null) {
             System.err.println("ОШИБКА: соединение с базой данных не установлено");
@@ -169,10 +127,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "SELECT ID, NAME, LASTNAME, AGE FROM USER";
 
-        try {
-            connection = getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(sql);
+        try (ResultSet resultSet = connection.createStatement().executeQuery(sql)){
 
             while (resultSet.next()) {
                 User user = new User();
@@ -190,33 +145,6 @@ public class UserDaoJDBCImpl implements UserDao {
             System.err.println("ОШИБКА при получении списка пользователей: " + e.getMessage());
             e.printStackTrace();
 
-        } finally {
-
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии ResultSet: " + e.getMessage());
-                }
-            }
-
-
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии Statement: " + e.getMessage());
-                }
-            }
-
-
-             if (connection != null) {
-                 try {
-                     connection.close();
-                 } catch (SQLException e) {
-                     e.printStackTrace();
-                 }
-             }
         }
         System.out.println("Все пользователи:");
         userList.forEach(System.out::println);
@@ -224,8 +152,9 @@ public class UserDaoJDBCImpl implements UserDao {
         return userList;
     }
 
+    @Override
     public void cleanUsersTable() {
-        PreparedStatement preparedStatement = null;
+
 
         if (connection == null) {
             System.err.println("ОШИБКА: соединение с базой данных не установлено");
@@ -234,25 +163,18 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "TRUNCATE TABLE USER";
 
-        try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(sql);
+        try(PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.executeUpdate();
             System.out.println("Таблица USER успешно очищена");
 
         } catch (SQLException e) {
             System.err.println("ОШИБКА при очистке таблицы: " + e.getMessage());
             e.printStackTrace();
-
-        } finally {
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    System.err.println("Ошибка при закрытии запроса очистки: " + e.getMessage());
-                }
-            }
-
         }
+    }
+
+    @Override
+    public void closeConnection() {
+        Util.closeConnection(connection);
     }
 }

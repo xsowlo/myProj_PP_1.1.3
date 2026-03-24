@@ -9,7 +9,7 @@ public class Util {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "Myrootsqlpass22";
 
-    public Util() {
+    private Util() {
 
     }
 
@@ -21,5 +21,16 @@ public class Util {
             e.printStackTrace();
         }
         return connection;
+    }
+
+    public static void closeConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+                System.out.println("Connection закрыт");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
