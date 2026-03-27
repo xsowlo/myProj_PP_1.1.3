@@ -74,19 +74,32 @@ public class UserDaoJDBCImpl implements UserDao {
 
 
         String sql = "INSERT INTO USER (NAME, LASTNAME, AGE) VALUES(?,?,?)";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
-            preparedStatement.setString(1, name);
-            preparedStatement.setString(2, lastName);
-            preparedStatement.setByte(3, age);
+        try {
 
-            preparedStatement.executeUpdate();
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, name);
+                preparedStatement.setString(2, lastName);
+                preparedStatement.setByte(3, age);
+
+                preparedStatement.executeUpdate();
+
+                connection.commit();
+                System.out.println("User с именем - " + name + " добавлен в базу данных");
 
 
-        } catch (SQLException e) {
+            } catch (SQLException e) {
+
+                connection.rollback();
+                e.printStackTrace();
+            } finally {
+                connection.setAutoCommit(true);
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("User с именем - " + name + " добавлен в базу данных");
-
     }
 
     @Override
@@ -99,19 +112,32 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "DELETE FROM USER WHERE ID = ?";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
-            preparedStatement.setLong(1, id);
+        try {
 
-            int resDrop = preparedStatement.executeUpdate();
+            connection.setAutoCommit(false);
 
-            if (resDrop > 0) {
-                System.out.println("Пользователь с ID " + id + " успешно удален");
-            } else {
-                System.out.println("Пользователь с ID " + id + " не найден");
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, id);
+
+                int resDrop = preparedStatement.executeUpdate();
+
+                connection.commit();
+
+                if (resDrop > 0) {
+                    System.out.println("Пользователь с ID " + id + " успешно удален");
+                } else {
+                    System.out.println("Пользователь с ID " + id + " не найден");
+                }
+
+            } catch (SQLException e) {
+                connection.rollback();
+                System.err.println("ОШИБКА при удалении пользователя: " + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                connection.setAutoCommit(true);
             }
 
-        } catch (SQLException e) {
-            System.err.println("ОШИБКА при удалении пользователя: " + e.getMessage());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -163,16 +189,27 @@ public class UserDaoJDBCImpl implements UserDao {
 
         String sql = "TRUNCATE TABLE USER";
 
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.executeUpdate();
-            System.out.println("Таблица USER успешно очищена");
+        try {
 
-        } catch (SQLException e) {
-            System.err.println("ОШИБКА при очистке таблицы: " + e.getMessage());
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.executeUpdate();
+                connection.commit();
+                System.out.println("Таблица USER успешно очищена");
+
+            } catch (SQLException e) {
+                connection.rollback();
+                System.err.println("ОШИБКА при очистке таблицы: " + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                connection.setAutoCommit(true);
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     @Override
     public void closeConnection() {
         Util.closeConnection(connection);
