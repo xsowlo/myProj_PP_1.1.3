@@ -10,6 +10,7 @@ import java.sql.Connection;
 public class Main {
     private final static UserService userService = new UserServiceImpl();
 
+
     public static void main(String[] args) {
         // реализуйте алгоритм здесь
         userService.createUsersTable();
@@ -22,7 +23,7 @@ public class Main {
         userService.dropUsersTable();
 
         //закрываем Connection
-        userService.closeConnection();
+        Util.closeConnection();
 
 
 

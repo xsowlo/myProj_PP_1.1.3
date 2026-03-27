@@ -19,8 +19,6 @@ public class UserDaoJDBCImpl implements UserDao {
     public UserDaoJDBCImpl() {
 
     }
-
-
     @Override
     public void createUsersTable() {
 
@@ -210,8 +208,5 @@ public class UserDaoJDBCImpl implements UserDao {
             e.printStackTrace();
         }
     }
-    @Override
-    public void closeConnection() {
-        Util.closeConnection(connection);
-    }
+
 }

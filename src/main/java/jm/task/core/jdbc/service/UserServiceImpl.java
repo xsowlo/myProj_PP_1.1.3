@@ -38,6 +38,4 @@ public class UserServiceImpl implements UserService {
         userDao.cleanUsersTable();
     }
 
-    @Override
-    public void closeConnection() {userDao.closeConnection();}
 }

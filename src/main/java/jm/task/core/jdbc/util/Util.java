@@ -9,21 +9,24 @@ public class Util {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "Myrootsqlpass22";
 
-    private Util() {
+    private static Connection connection;
 
-    }
-
-    public static Connection getConnection() {
-        Connection connection = null;
+    static {
         try{
             connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    private Util() {
+
+    }
+
+    public static Connection getConnection() {
         return connection;
     }
 
-    public static void closeConnection(Connection connection) {
+    public static void closeConnection() {
         if (connection != null) {
             try {
                 connection.close();
